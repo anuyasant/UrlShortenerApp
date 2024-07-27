@@ -36,7 +36,7 @@ class UrlShortenerServiceImplTest {
     private UrlShortenerServiceImpl serviceImpl;
 
     private static final String VALID_LONG_URL = "https://www.test.com";
-    private static final String VALID_SHORT_URL = "YHe35GM";
+    private static final String VALID_SHORT_URL = "Ye35GM";
 
     private static Stream<Arguments> invalidLongUrlData() {
         return Stream.of(

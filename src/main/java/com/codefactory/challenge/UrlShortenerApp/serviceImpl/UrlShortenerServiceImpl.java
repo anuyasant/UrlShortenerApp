@@ -6,6 +6,7 @@ import com.codefactory.challenge.UrlShortenerApp.exception.UrlShortenerException
 import com.codefactory.challenge.UrlShortenerApp.repository.UrlShortenerRepository;
 import com.codefactory.challenge.UrlShortenerApp.service.UrlShortenerService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -17,13 +18,14 @@ import static org.springframework.http.HttpStatus.NOT_ACCEPTABLE;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UrlShortenerServiceImpl implements UrlShortenerService {
 
     private static final String BASE62_CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     public static final String SHORT_URL_CANNOT_BE_EMPTY = "Short URL cannot be empty.";
     public static final String INVALID_URL = "Invalid Url.";
     public static final String NOT_FOUND_IN_DATABASE = "Url not found in database for given short url.";
-    private static final int SHORT_URL_LENGTH = 7;
+    private static final int SHORT_URL_LENGTH = 6;
     private static final String SHORT_URL_PATTERN = "[a-zA-z0-9]*";
 
 
@@ -88,6 +90,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
         try {
             URI.create(url).toURL();
         } catch (Exception e) {
+            log.error("Exception occurred while validating URL: {}", e.getMessage());
             throw new UrlShortenerException(INVALID_URL, HttpStatus.NOT_ACCEPTABLE);
         }
     }
