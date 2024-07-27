@@ -1,6 +1,7 @@
 package com.codefactory.challenge.UrlShortenerApp.serviceImpl;
 
 import com.codefactory.challenge.UrlShortenerApp.entity.UrlDataEntity;
+import com.codefactory.challenge.UrlShortenerApp.exception.UrlShortenerException;
 import com.codefactory.challenge.UrlShortenerApp.repository.UrlShortenerRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,14 +50,14 @@ class UrlShortenerServiceImplTest {
     @ParameterizedTest
     @MethodSource("invalidLongUrlData")
     void testGetShortUrlWhenInvalidUrlThenThrowException(String url) {
-        Exception exception = assertThrows(Exception.class,
+        UrlShortenerException exception = assertThrows(UrlShortenerException.class,
                 () -> serviceImpl.generateShortUrl(url));
         verify(urlShortenerRepository, never()).save(any(UrlDataEntity.class));
         assertEquals(INVALID_URL, exception.getMessage());
     }
 
     @Test
-    void testGetShortUrlWhenValidUrlThenGeneratesShortUrl() throws Exception {
+    void testGetShortUrlWhenValidUrlThenGeneratesShortUrl() throws UrlShortenerException {
         when(urlShortenerRepository.save(any(UrlDataEntity.class))).thenReturn(stubUrlDataEntity());
         String generatedShortUrl = serviceImpl.generateShortUrl(VALID_LONG_URL);
         verify(urlShortenerRepository, times(1)).save(dataEntityArgumentCaptor.capture());
@@ -66,8 +67,8 @@ class UrlShortenerServiceImplTest {
 
     @Test
     void testGetLongUrlWhenEmptyShortUrlThenThrowException() {
-        Exception exception = assertThrows(Exception.class,
-                () -> serviceImpl.getLongUrl(""));
+        UrlShortenerException exception = assertThrows(UrlShortenerException.class,
+                () -> serviceImpl.getOriginalUrl(""));
         assertEquals(SHORT_URL_CANNOT_BE_EMPTY, exception.getMessage());
     }
 
@@ -83,26 +84,26 @@ class UrlShortenerServiceImplTest {
     @ParameterizedTest
     @MethodSource("invalidShortUrlData")
     void testGetLongUrlWhenSHortUrlIncorrectSizeShortUrlThenThrowException(String shortUrl) {
-        Exception exception = assertThrows(Exception.class,
-                () -> serviceImpl.getLongUrl(shortUrl));
+        UrlShortenerException exception = assertThrows(UrlShortenerException.class,
+                () -> serviceImpl.getOriginalUrl(shortUrl));
         assertEquals(INVALID_URL, exception.getMessage());
     }
 
     @Test
     void testGetLongUrlWhenIdNotFoundThenThrowException() {
-        Exception exception = assertThrows(Exception.class,
-                () -> serviceImpl.getLongUrl(VALID_SHORT_URL));
+        UrlShortenerException exception = assertThrows(UrlShortenerException.class,
+                () -> serviceImpl.getOriginalUrl(VALID_SHORT_URL));
         assertEquals(NOT_FOUND_IN_DATABASE, exception.getMessage());
     }
 
     @Test
-    void testValidateEncodedAndDecodedValuesMatch() throws Exception {
+    void testValidateEncodedAndDecodedValuesMatch() throws UrlShortenerException {
         UrlDataEntity urlDataEntity = stubUrlDataEntity();
         when(urlShortenerRepository.save(any(UrlDataEntity.class))).thenReturn(urlDataEntity);
         String generatedShortUrl = serviceImpl.generateShortUrl(VALID_LONG_URL);
 
         when(urlShortenerRepository.findById(anyInt())).thenReturn(Optional.of(urlDataEntity));
-        String longUrl = serviceImpl.getLongUrl(generatedShortUrl);
+        String longUrl = serviceImpl.getOriginalUrl(generatedShortUrl);
         assertEquals(VALID_LONG_URL, longUrl);
     }
 

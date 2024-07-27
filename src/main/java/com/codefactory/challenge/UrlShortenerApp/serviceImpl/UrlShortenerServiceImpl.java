@@ -2,13 +2,18 @@ package com.codefactory.challenge.UrlShortenerApp.serviceImpl;
 
 import ch.qos.logback.core.util.StringUtil;
 import com.codefactory.challenge.UrlShortenerApp.entity.UrlDataEntity;
+import com.codefactory.challenge.UrlShortenerApp.exception.UrlShortenerException;
 import com.codefactory.challenge.UrlShortenerApp.repository.UrlShortenerRepository;
 import com.codefactory.challenge.UrlShortenerApp.service.UrlShortenerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.util.Optional;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_ACCEPTABLE;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +30,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
     private final UrlShortenerRepository urlShortenerRepository;
 
     @Override
-    public String generateShortUrl(String longUrl) throws Exception {
+    public String generateShortUrl(String longUrl) throws UrlShortenerException {
         isValidUrl(longUrl);
 
         UrlDataEntity urlDataEntity = UrlDataEntity.builder().longUrl(longUrl).build();
@@ -34,24 +39,24 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
     }
 
     @Override
-    public String getLongUrl(String shortUrl) throws Exception {
+    public String getOriginalUrl(String shortUrl) throws UrlShortenerException {
         isValidShortUrl(shortUrl);
         int decodedNumber = decodeFromBase62(shortUrl);
 
         Optional<UrlDataEntity> urlDataEntity = urlShortenerRepository.findById(decodedNumber);
         if (urlDataEntity.isEmpty()) {
-            throw new Exception(NOT_FOUND_IN_DATABASE);
+            throw new UrlShortenerException(NOT_FOUND_IN_DATABASE, HttpStatus.NOT_FOUND);
         }
         return urlDataEntity.get().getLongUrl();
     }
 
-    private void isValidShortUrl(String shortUrl) throws Exception {
+    private void isValidShortUrl(String shortUrl) throws UrlShortenerException {
         if (StringUtil.isNullOrEmpty(shortUrl))
-            throw new Exception(SHORT_URL_CANNOT_BE_EMPTY);
+            throw new UrlShortenerException(SHORT_URL_CANNOT_BE_EMPTY, NOT_ACCEPTABLE);
         if (shortUrl.length() != SHORT_URL_LENGTH)
-            throw new Exception(INVALID_URL);
+            throw new UrlShortenerException(INVALID_URL, BAD_REQUEST);
         if (!shortUrl.matches(SHORT_URL_PATTERN))
-            throw new Exception(INVALID_URL);
+            throw new UrlShortenerException(INVALID_URL, BAD_REQUEST);
     }
 
     private int decodeFromBase62(String shortUrl) {
@@ -79,11 +84,11 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
         return stringBuilder.toString();
     }
 
-    private void isValidUrl(String url) throws Exception {
+    private void isValidUrl(String url) throws UrlShortenerException {
         try {
             URI.create(url).toURL();
         } catch (Exception e) {
-            throw new Exception(INVALID_URL);
+            throw new UrlShortenerException(INVALID_URL, HttpStatus.NOT_ACCEPTABLE);
         }
     }
 }
