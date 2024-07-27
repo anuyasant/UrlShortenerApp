@@ -1,43 +1,48 @@
 package com.codefactory.challenge.UrlShortenerApp.serviceImpl;
 
 import ch.qos.logback.core.util.StringUtil;
+import com.codefactory.challenge.UrlShortenerApp.entity.UrlDataEntity;
+import com.codefactory.challenge.UrlShortenerApp.repository.UrlShortenerRepository;
 import com.codefactory.challenge.UrlShortenerApp.service.UrlShortenerService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UrlShortenerServiceImpl implements UrlShortenerService {
 
     private static final String BASE62_CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     public static final String SHORT_URL_CANNOT_BE_EMPTY = "Short URL cannot be empty.";
     public static final String INVALID_URL = "Invalid Url.";
-    private static final int SHORT_URL_LENGTH = 6;
+    public static final String NOT_FOUND_IN_DATABASE = "Url not found in database for given short url.";
+    private static final int SHORT_URL_LENGTH = 7;
     private static final String SHORT_URL_PATTERN = "[a-zA-z0-9]*";
 
 
-    private static final Map<Integer, String> URL_MAP = new HashMap<>();
+    private final UrlShortenerRepository urlShortenerRepository;
 
     @Override
-    public String getShortUrl(String url) throws Exception {
-        isValidUrl(url);
+    public String generateShortUrl(String longUrl) throws Exception {
+        isValidUrl(longUrl);
 
-        Random random = new Random();
-        int upperBound = 25000000;
-        int number = random.nextInt(upperBound);
-        String generatedShortUrl = encodeToBase62(number);
-        URL_MAP.put(number, url);
-        return generatedShortUrl;
+        UrlDataEntity urlDataEntity = UrlDataEntity.builder().longUrl(longUrl).build();
+        UrlDataEntity urlDataEntitySaved = urlShortenerRepository.save(urlDataEntity);
+        return encodeToBase62(urlDataEntitySaved.getId());
     }
 
     @Override
     public String getLongUrl(String shortUrl) throws Exception {
         isValidShortUrl(shortUrl);
         int decodedNumber = decodeFromBase62(shortUrl);
-        return URL_MAP.get(decodedNumber);
+
+        Optional<UrlDataEntity> urlDataEntity = urlShortenerRepository.findById(decodedNumber);
+        if (urlDataEntity.isEmpty()) {
+            throw new Exception(NOT_FOUND_IN_DATABASE);
+        }
+        return urlDataEntity.get().getLongUrl();
     }
 
     private void isValidShortUrl(String shortUrl) throws Exception {
@@ -59,7 +64,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
         return decodedNumber;
     }
 
-    private String encodeToBase62(int number) {
+    private String encodeToBase62(Integer number) {
         StringBuilder stringBuilder = new StringBuilder();
 
         while (number > 0) {
