@@ -7,6 +7,7 @@ import com.codefactory.challenge.UrlShortenerApp.repository.UrlShortenerReposito
 import com.codefactory.challenge.UrlShortenerApp.service.UrlShortenerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -25,8 +26,10 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
     public static final String SHORT_URL_CANNOT_BE_EMPTY = "Short URL cannot be empty.";
     public static final String INVALID_URL = "Invalid Url.";
     public static final String NOT_FOUND_IN_DATABASE = "Url not found in database for given short url.";
-    private static final int SHORT_URL_LENGTH = 6;
     private static final String SHORT_URL_PATTERN = "[a-zA-z0-9]*";
+
+    @Value("${app.maxShortUrlLength:6}")
+    private int maxShortUrlLength;
 
 
     private final UrlShortenerRepository urlShortenerRepository;
@@ -55,7 +58,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
     private void isValidShortUrl(String shortUrl) throws UrlShortenerException {
         if (StringUtil.isNullOrEmpty(shortUrl))
             throw new UrlShortenerException(SHORT_URL_CANNOT_BE_EMPTY, NOT_ACCEPTABLE);
-        if (shortUrl.length() != SHORT_URL_LENGTH)
+        if (shortUrl.length() != maxShortUrlLength)
             throw new UrlShortenerException(INVALID_URL, BAD_REQUEST);
         if (!shortUrl.matches(SHORT_URL_PATTERN))
             throw new UrlShortenerException(INVALID_URL, BAD_REQUEST);
@@ -64,9 +67,9 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
     private int decodeFromBase62(String shortUrl) {
         int decodedNumber = 0;
 
-        for (int i = 0; i < SHORT_URL_LENGTH; i++) {
+        for (int i = 0; i < maxShortUrlLength; i++) {
             char character = shortUrl.charAt(i);
-            decodedNumber += BASE62_CHARACTERS.indexOf(character) * Math.pow(62, SHORT_URL_LENGTH - 1 - i);
+            decodedNumber += BASE62_CHARACTERS.indexOf(character) * Math.pow(62, maxShortUrlLength - 1 - i);
         }
         return decodedNumber;
     }
@@ -80,7 +83,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
             number /= 62;
         }
 
-        while (stringBuilder.length() < SHORT_URL_LENGTH) {
+        while (stringBuilder.length() < maxShortUrlLength) {
             stringBuilder.insert(0, "0");
         }
         return stringBuilder.toString();

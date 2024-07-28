@@ -19,7 +19,7 @@ public class UrlShortenerController {
     private String appDomain;
     private static final String SEPARATOR = "/";
 
-    @PostMapping("/app/create")
+    @PostMapping("/shorturl/create")
     public ResponseEntity<String> generateShortUrl(@RequestBody String longUrl) throws UrlShortenerException {
         String shortUrl = urlShortenerService.generateShortUrl(longUrl);
         return ResponseEntity.status(HttpStatus.OK)

@@ -3,6 +3,7 @@ package com.codefactory.challenge.UrlShortenerApp.serviceImpl;
 import com.codefactory.challenge.UrlShortenerApp.entity.UrlDataEntity;
 import com.codefactory.challenge.UrlShortenerApp.exception.UrlShortenerException;
 import com.codefactory.challenge.UrlShortenerApp.repository.UrlShortenerRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,6 +23,7 @@ import static com.codefactory.challenge.UrlShortenerApp.serviceImpl.UrlShortener
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 @ExtendWith(MockitoExtension.class)
 class UrlShortenerServiceImplTest {
@@ -37,6 +39,11 @@ class UrlShortenerServiceImplTest {
 
     private static final String VALID_LONG_URL = "https://www.test.com";
     private static final String VALID_SHORT_URL = "Ye35GM";
+
+    @BeforeEach
+    void setup(){
+        setField(serviceImpl, "maxShortUrlLength", 6);
+    }
 
     private static Stream<Arguments> invalidLongUrlData() {
         return Stream.of(

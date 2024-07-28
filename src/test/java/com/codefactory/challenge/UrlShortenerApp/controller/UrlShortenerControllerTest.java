@@ -50,7 +50,7 @@ class UrlShortenerControllerTest {
 
     @Test
     public void testGenerateShortURL() throws Exception {
-        String uri = "/app/create";
+        String uri = "/shorturl/create";
         String urlAppend = "localhost:8080/";
         when(urlService.generateShortUrl(TEST_LONG_URL)).thenReturn(TEST_SHORT_URL);
         MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.post(uri)
@@ -73,7 +73,7 @@ class UrlShortenerControllerTest {
 
     @Test
     void testHandleException() throws Exception {
-        String uri = "/app/create";
+        String uri = "/shorturl/create";
         when(urlService.generateShortUrl(anyString()))
                 .thenThrow(new UrlShortenerException(INVALID_URL, HttpStatus.NOT_ACCEPTABLE));
         MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.post(uri)
